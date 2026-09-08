@@ -1,0 +1,37 @@
+name: Add privacy policy links
+
+on:
+  push:
+    paths:
+      - '.github/workflows/add-privacy-link.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add privacy links
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          old_note = '<div class="note">Демо-форма: перед коммерческим запуском нужно подключить отправку на e-mail/CRM и согласие на обработку персональных данных.</div>'
+          new_note = '<div class="note">Демо-форма: перед коммерческим запуском нужно подключить отправку на e-mail/CRM и согласие на обработку персональных данных. <a href="privacy.html" style="text-decoration:underline">Политика конфиденциальности</a>.</div>'
+          s = s.replace(old_note, new_note)
+          old_footer = '<p>ООО «Тепло-Проект» · Киров<br>© <span id="year"></span></p>'
+          new_footer = '<p>ООО «Тепло-Проект» · Киров<br><a href="privacy.html" style="color:inherit;text-decoration:underline">Политика конфиденциальности</a><br>© <span id="year"></span></p>'
+          s = s.replace(old_footer, new_footer)
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit links
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Link privacy policy from site"
+          git push
