@@ -1,0 +1,33 @@
+name: Update contact details
+
+on:
+  push:
+    paths:
+      - '.github/workflows/update-contacts.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replace contact details
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace('<a href="tel:+78332543334">+7 (8332) 54-33-34</a><a href="tel:+79226642524">+7 (922) 664-25-24</a><span>610035, г. Киров, Мелькомбинатовский проезд, д. 7</span>', '<a href="tel:+79958820152">+7 995 882-01-52</a><span>610002, Киров, Никитская 145А</span>')
+          s = s.replace('<a href="tel:+78332543334">+7 (8332) 54-33-34</a>\n            <a href="tel:+79226642524">+7 (922) 664-25-24</a>\n            <span>610035, г. Киров, Мелькомбинатовский проезд, д. 7</span>', '<a href="tel:+79958820152">+7 995 882-01-52</a>\n            <span>610002, Киров, Никитская 145А</span>')
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Update phone and address"
+          git push
